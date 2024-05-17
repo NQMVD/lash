@@ -42,14 +42,13 @@ choose = function(items)
         command = string.format('%s "%s"', command, v)
     end
 
-    io.stdout:setvbuf 'no'
+    io.stdout:setvbuf'no'
     local pipe = io.popen(command)
     if pipe then
         for line in pipe:lines() do
             table.insert(stdout, line)
         end
-        local _, error_msg, ret_code = pipe:close()
-        if error_msg then return false, error_msg end
+        local _, _, ret_code = pipe:close()
         exit_code = ret_code
     else
         return false, "popen failed!"
@@ -58,8 +57,37 @@ choose = function(items)
     return true, table.concat(stdout, '\n'), exit_code
 end
 
-choose_multi = function()
+choose_multi = function(items, limit)
+    if #items < 2 then return false, "not enough items..." end
+    local nolimit = (limit == nil)
 
+    local stdout = {}
+    local exit_code = nil
+
+    local command = 'gum choose'
+    for _,v  in ipairs(items) do
+        command = string.format('%s "%s"', command, v)
+    end
+
+    if nolimit then
+        command = string.format('%s --no-limit', command)
+    else
+        command = string.format('%s --limit=%d', command, limit)
+    end
+
+    io.stdout:setvbuf'no'
+    local pipe = io.popen(command)
+    if pipe then
+        for line in pipe:lines() do
+            table.insert(stdout, line)
+        end
+        local _, _, ret_code = pipe:close()
+        exit_code = ret_code
+    else
+        return false, "popen failed!"
+    end
+
+    return true, stdout, exit_code
 end
 
 -- TODO: add more gum commands here
@@ -89,4 +117,10 @@ end
 
 printf = function(...)
     print(string.format(...))
+end
+
+printt = function(tbl)
+    for k,v  in pairs(tbl) do
+        print(k, v)
+    end
 end
